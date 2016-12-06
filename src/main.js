@@ -22,12 +22,13 @@ export class MyAwesomeReactComponent extends React.Component {
 
   async componentDidMount() {
     const myCollection = await db.collection("myCollection", mySchema);
-    myCollection.find({}).$.filter(docs => !!docs).map(docs => docs.map(doc => (
+    myCollection.query().sort({id: 1}).$.filter(docs => !!docs).map(docs => docs.map(doc => (
       {id: doc.get("id"), message: doc.get("message")}
     ))).subscribe(messages => {
-      this.setState({messages});
+      this.setState({messages: messages.reverse()});
     });
     this.myCollection = myCollection;
+    this.myCollection.sync("http://localhost:5000/my-db");
   }
 
   async handleOnClick(e) {
@@ -42,7 +43,6 @@ export class MyAwesomeReactComponent extends React.Component {
     const doc = await this.myCollection.findOne(id).exec();
     if (!doc) return;
     await doc.remove();
-    console.log(doc);
     this.setState({messages: this.state.messages.filter(m => m.id !==id)});
   }
 
@@ -53,9 +53,10 @@ export class MyAwesomeReactComponent extends React.Component {
   renderMessages() {
     const {messages} = this.state;
     return messages.map(({id, message}) => {
+      const date = new Date(+id).toLocaleString();
       return (
         <Card key={id}>
-          <CardHeader title={id} />
+          <CardHeader title={date} />
           <CardText>{message}</CardText>
           <CardActions>
             <IconButton onClick={this.handleOnClickDetele.bind(this, id)}>
@@ -98,9 +99,12 @@ const App = () => (
 
 let db;
 
-// RxDB.plugin(require("pouchdb-adapter-memory"));
+RxDB.plugin(require("pouchdb-adapter-memory"));
 RxDB.plugin(require("rxdb-adapter-localstorage"));
-RxDB.create("mydb", "localstorage").then(_db => {
+RxDB.plugin(require("pouchdb-adapter-http"));
+RxDB.plugin(require("pouchdb-replication"));
+// RxDB.create("http://localhost:5000/my-db", "http").then(_db => {
+RxDB.create("myDb", "localstorage").then(_db => {
   db = _db;
   console.log(db);
   ReactDOM.render(<App />, document.getElementById('app'));
