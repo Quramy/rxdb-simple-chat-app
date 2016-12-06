@@ -126,10 +126,9 @@ let db;
 RxDB.plugin(require("rxdb-adapter-localstorage"));
 RxDB.plugin(require("pouchdb-adapter-http"));
 RxDB.plugin(require("pouchdb-replication"));
-// RxDB.create("http://localhost:5000/my-db", "http").then(_db => {
 RxDB.create("myDb", "localstorage").then(_db => {
   db = _db;
   console.log(db);
-  ReactDOM.render(<App />, document.getElementById('app'));
+  ReactDOM.render(<App />, document.getElementById("app"));
 });
 

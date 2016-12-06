@@ -1,19 +1,21 @@
 {
-  "name": "rxdb-study",
+  "name": "rxdb-simple-chat-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "simple chat application using RxDB",
   "main": "src/electron-main.js",
   "scripts": {
+    "bundle": "rimraf dist && webpack",
     "watch": "rimraf dist && webpack -w",
-    "web": "http-server -p 4000",
-    "open": "wait-on dist/main.bundle.js && opener http://localhost:4000",
+    "http": "http-server -p 4000",
+    "open:web": "wait-on dist/main.bundle.js && opener http://localhost:4000",
+    "open:electron": "wait-on dist/main.bundle.js && electron .",
     "serve:db": "pouchdb-server -d ./database -p 5000",
     "clean:db": "rimraf database config.json",
-    "start": "run-p watch web open"
+    "start": "run-p bundle http open:web open:electron"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["rx", "rxdb", "electron", "pouchdb"],
+  "author": "Quramy",
+  "license": "MIT",
   "dependencies": {
     "abstract-leveldown": "^2.6.1",
     "babel-cli": "^6.18.0",
