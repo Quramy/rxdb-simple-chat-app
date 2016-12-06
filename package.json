@@ -2,12 +2,14 @@
   "name": "rxdb-study",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/electron-main.js",
   "scripts": {
-    "watch": "webpack -w",
+    "watch": "rimraf dist && webpack -w",
     "web": "http-server -p 4000",
+    "open": "wait-on dist/main.bundle.js && opener http://localhost:4000",
     "serve:db": "pouchdb-server -d ./database -p 5000",
-    "start": "run-p watch web"
+    "clean:db": "rimraf database config.json",
+    "start": "run-p watch web open"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +23,7 @@
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-react": "^6.16.0",
     "babel-preset-stage-3": "^6.17.0",
+    "electron": "^1.4.10",
     "http-server": "^0.9.0",
     "json-loader": "^0.5.4",
     "material-ui": "^0.16.4",

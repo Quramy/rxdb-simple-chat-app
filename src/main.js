@@ -4,20 +4,30 @@ import "rxjs";
 import * as RxDB from "rxdb";
 import { mySchema } from "./my-schema";
 
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import injectTapEventPlugin from "react-tap-event-plugin";
+import ReactDOM from "react-dom";
+
+import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
+import darkBaseTheme from "material-ui/styles/baseThemes/darkBaseTheme";
+import getMuiTheme from "material-ui/styles/getMuiTheme";
 import AppBar from "material-ui/AppBar";
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import Paper from "material-ui/Paper";
 import TextField from "material-ui/TextField";
 import { Card, CardHeader, CardTitle, CardText, CardActions } from "material-ui/Card";
 import IconButton from "material-ui/IconButton";
-import RaisedButton from 'material-ui/RaisedButton';
+import RaisedButton from "material-ui/RaisedButton";
 import Delete from "material-ui/svg-icons/action/delete";
+import Snackbar from "material-ui/Snackbar";
 
-export class MyAwesomeReactComponent extends React.Component {
+injectTapEventPlugin();
+
+export class RxDbChat extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {newMessage: "", messages: []};
+    this.state = {
+      newMessage: "", messages: [], syncState: null,
+    };
   }
 
   async componentDidMount() {
@@ -28,10 +38,16 @@ export class MyAwesomeReactComponent extends React.Component {
       this.setState({messages: messages.reverse()});
     });
     this.myCollection = myCollection;
-    this.myCollection.sync("http://localhost:5000/my-db");
+    this.myCollection.sync("http://localhost:5000/my-db")
+    .on("error", () => this.setState({syncState: "error"}))
+    .on("active", () => console.log("active!"))
+    .on("paused", () => console.log("paused!"))
+    .on("denied", () => console.log("denied!"))
+    .on("complete", () => console.log("complete!"))
+    ;
   }
 
-  async handleOnClick(e) {
+  async handleOnSubmit(e) {
    e && e.preventDefault();
    const id = Date.now() + "";
    const newMessage = {id, message: this.state.newMessage};
@@ -55,7 +71,7 @@ export class MyAwesomeReactComponent extends React.Component {
     return messages.map(({id, message}) => {
       const date = new Date(+id).toLocaleString();
       return (
-        <Card key={id}>
+        <Card key={id} style={{marginBottom: 20}}>
           <CardHeader title={date} />
           <CardText>{message}</CardText>
           <CardActions>
@@ -72,34 +88,41 @@ export class MyAwesomeReactComponent extends React.Component {
     return (
       <div>
         <AppBar title="RxDB Chat" />
-        <form onSubmit={this.handleOnClick.bind(this)}>
-          <TextField
-            fullWidth={true}
-            floatingLabelText="Message"
-            value={this.state.newMessage}
-            onChange={this.handleOnChangeNewMessage.bind(this)}
+        <div style={{padding: 30}}>
+          <form style={{marginBottom: 20}} onSubmit={this.handleOnSubmit.bind(this)}>
+            <TextField
+              fullWidth={true}
+              hintText="Hit enter to post"
+              floatingLabelText="Message"
+              value={this.state.newMessage}
+              onChange={this.handleOnChangeNewMessage.bind(this)}
+            />
+          </form>
+          <div>{this.renderMessages()}</div>
+          <Snackbar 
+            message="Cannot sync to remote server"
+            autoHideDuration={5000}
+            open={this.state.syncState==="error"}
           />
-          <RaisedButton
-            label="Send"
-            primary={true}
-            onClick={this.handleOnClick.bind(this)}
-           />
-        </form>
-        <div>{this.renderMessages()}</div>
+        </div>
       </div>
     );
   }
 }
 
-const App = () => (
-  <MuiThemeProvider>
-    <MyAwesomeReactComponent />
-  </MuiThemeProvider>
-);
+const App = () => {
+  if (!window.process) {
+    return (<MuiThemeProvider><RxDbChat /></MuiThemeProvider>);
+  } else {
+    // for Electron
+    document.documentElement.style.backgroundColor = "#303030";
+    return (<MuiThemeProvider muiTheme={getMuiTheme(darkBaseTheme)}><RxDbChat /></MuiThemeProvider>);
+  }
+};
 
 let db;
 
-RxDB.plugin(require("pouchdb-adapter-memory"));
+// RxDB.plugin(require("pouchdb-adapter-memory"));
 RxDB.plugin(require("rxdb-adapter-localstorage"));
 RxDB.plugin(require("pouchdb-adapter-http"));
 RxDB.plugin(require("pouchdb-replication"));

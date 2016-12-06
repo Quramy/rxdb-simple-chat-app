@@ -8,7 +8,10 @@ export const mySchema = {
       primary: true
     },
     message: {
-      tupe: "string"
+      type: "string"
+    },
+    device: {
+      type: "string"
     }
   }
 }
