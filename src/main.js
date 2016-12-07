@@ -1,6 +1,6 @@
 import "babel-polyfill";
 
-import "rxjs";
+import { Subject } from "rxjs";
 import * as RxDB from "rxdb";
 import { mySchema } from "./my-schema";
 
@@ -26,7 +26,7 @@ export class RxDbChat extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      newMessage: "", messages: [], syncState: null,
+      newMessage: "", messages: [], syncState: null
     };
   }
 
@@ -39,11 +39,11 @@ export class RxDbChat extends React.Component {
     });
     this.myCollection = myCollection;
     this.myCollection.sync("http://localhost:5000/my-db")
-    .on("error", () => this.setState({syncState: "error"}))
-    .on("active", () => console.log("active!"))
-    .on("paused", () => console.log("paused!"))
-    .on("denied", () => console.log("denied!"))
-    .on("complete", () => console.log("complete!"))
+    .on("change", (info) => console.log("change!", info))
+    .on("active", (info) => console.log("active!", info))
+    .on("denied", (info) => console.log("denied!", info))
+    .on("paused", (info) => console.log("paused", info))
+    .on("error",  (info) => console.log("error", info))
     ;
   }
 
@@ -100,9 +100,9 @@ export class RxDbChat extends React.Component {
           </form>
           <div>{this.renderMessages()}</div>
           <Snackbar 
-            message="Cannot sync to remote server"
+            message="Cannot connect to remote database"
             autoHideDuration={5000}
-            open={this.state.syncState==="error"}
+            open={this.state.syncState==="pause"}
           />
         </div>
       </div>
